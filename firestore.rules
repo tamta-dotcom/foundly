@@ -1,0 +1,89 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isParticipant(conversationData) {
+      return signedIn()
+        && request.auth.uid in conversationData.participants;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+
+      allow create: if signedIn()
+        && request.auth.uid == userId;
+
+      allow update, delete: if signedIn()
+        && request.auth.uid == userId;
+    }
+
+    match /listings/{listingId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.title is string
+        && request.resource.data.description is string
+        && request.resource.data.location is string
+        && request.resource.data.type in ['lost', 'found']
+        && request.resource.data.status == 'active';
+
+      allow update: if signedIn()
+        && (
+          resource.data.ownerId == request.auth.uid
+          ||
+          (
+            request.resource.data.diff(resource.data)
+              .affectedKeys().hasOnly(['savedBy'])
+            && request.resource.data.savedBy is list
+            && request.auth.uid in request.resource.data.savedBy
+                == (
+                  request.auth.uid in resource.data.savedBy
+                ) == false
+          )
+        );
+
+      allow delete: if signedIn()
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if isParticipant(resource.data);
+
+      allow create: if signedIn()
+        && request.auth.uid in request.resource.data.participants
+        && request.resource.data.participants is list
+        && request.resource.data.participants.size() == 2;
+
+      allow update: if isParticipant(resource.data)
+        && request.resource.data.participants == resource.data.participants
+        && request.resource.data.diff(resource.data)
+          .affectedKeys().hasOnly(['lastMessage', 'updatedAt']);
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function parentConversation() {
+          return get(
+            /databases/$(database)/documents/conversations/$(conversationId)
+          ).data;
+        }
+
+        allow read: if isParticipant(parentConversation());
+
+        allow create: if isParticipant(parentConversation())
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000;
+
+        allow update, delete: if false;
+      }
+    }
+  }
+}
