@@ -100,7 +100,7 @@ const contactOwner = async () => {
   try {
     if (!user) {
       Alert.alert('Sign in required', 'Please sign in to message the owner.');
-      router.push('/signin');
+      router.push('/login');
       return;
     }
 
@@ -122,7 +122,7 @@ const contactOwner = async () => {
     });
 
     router.push({
-      pathname: '/(tabs)/messages',
+      pathname: '/(tabs)/message',
       params: {
         conversationId,
         listingId: String(item.id || (Array.isArray(id) ? id[0] : id)),

@@ -26,7 +26,7 @@ export async function pickListingImage() {
   return result.assets[0].uri;
 }
 
-// Upload the photo to Cloudinary.```js
+// Upload the photo to Cloudinary.
 export async function uploadImageAsync(uri) {
   if (!uri) {
     throw new Error('No image selected.');

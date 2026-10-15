@@ -7,9 +7,9 @@ import React, {
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth,db,storage } from '../services/firebase';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext<any>(null);
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 

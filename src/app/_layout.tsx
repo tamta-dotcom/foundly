@@ -8,12 +8,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
-      <StatusBar
-        style="dark"
-        backgroundColor="#F8FAFC"
-        translucent={false}
-      />
-
+      <StatusBar style="dark" />
       <AuthProvider>
         <Stack
           screenOptions={{
